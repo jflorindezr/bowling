@@ -8,6 +8,8 @@ import java.util.Map;
 
 public class ScoreProcessor implements IScoreProcessor {
 
+    private static final Integer MAX_NEXT_BALLS_CONSIDERED = 2;
+
     public void calculateScores(Map<String, Player> players) {
         // For each player, calculate its score
         players.forEach((k, v) -> {
@@ -25,10 +27,10 @@ public class ScoreProcessor implements IScoreProcessor {
             if (!currentFrame.isLastFrame()) {
                 // If current frame is a spare or a strike then add up corresponding next frames
                 if (currentFrame.isSpare()) {
-                    Integer nextFrameHits = calculateIfShouldAddFromNextFrames(currentFrame, currentFrame, player.getFrames(), false);
+                    Integer nextFrameHits = calculateIfShouldAddFromNextFrames(currentFrame, currentFrame, player.getFrames(), false, 0);
                     currentFrame.setScore(currentFrame.getScore() + individualScore + nextFrameHits);
                 } else if (currentFrame.isStrike()) {
-                    Integer nextFrameHits = calculateIfShouldAddFromNextFrames(currentFrame, currentFrame, player.getFrames(), false);
+                    Integer nextFrameHits = calculateIfShouldAddFromNextFrames(currentFrame, currentFrame, player.getFrames(), false, 0);
                     currentFrame.setScore(currentFrame.getScore() + nextFrameHits);
                 } else {
                     currentFrame.setScore(currentFrame.getScore() + individualScore);
@@ -41,7 +43,11 @@ public class ScoreProcessor implements IScoreProcessor {
         }
     }
 
-    private Integer calculateIfShouldAddFromNextFrames(Frame targetFrame, Frame currentFrame, List<Frame> frames, boolean stopWhenSpare) {
+    private Integer calculateIfShouldAddFromNextFrames(Frame targetFrame, Frame currentFrame, List<Frame> frames, boolean stopWhenSpare, Integer iteration) {
+        if (iteration > MAX_NEXT_BALLS_CONSIDERED) {
+            return 0;
+        }
+
         if (currentFrame.isLastFrame()) {
             return calculateWhatScoreReturnFromLastFrame(targetFrame, currentFrame, frames.get(currentFrame.getNumber()-2));
         }
@@ -54,7 +60,7 @@ public class ScoreProcessor implements IScoreProcessor {
             }
             return nextFrame.isStrike() ? nextFrame.sumAllRollsHits() : nextFrame.getFirstChanceHits();
         } else if (currentFrame.isStrike()) {
-            Integer calculatedHits = calculateIfShouldAddFromNextFrames(targetFrame, nextFrame, frames, true);
+            Integer calculatedHits = calculateIfShouldAddFromNextFrames(targetFrame, nextFrame, frames, true, ++iteration);
             return currentFrame.sumAllRollsHits() + calculatedHits;
         }
 
@@ -64,12 +70,9 @@ public class ScoreProcessor implements IScoreProcessor {
     private Integer calculateWhatScoreReturnFromLastFrame(Frame targetFrame, Frame currentFrame, Frame previousFrame) {
         // Only if the current frame is the consecutive of the target frame
         if (targetFrame.getNumber().equals(previousFrame.getNumber())) {
-            if (currentFrame.isSpare()) {
-                return currentFrame.sumHitsOfSpare();
-            }
-            return currentFrame.sumAllStrikesHits() + currentFrame.getFirstChanceNotStrikeHits();
+            return currentFrame.sumTwoHits();
         }
-        return currentFrame.sumAllStrikesHits();
+        return currentFrame.getFirstChanceHits();
     }
 
 }

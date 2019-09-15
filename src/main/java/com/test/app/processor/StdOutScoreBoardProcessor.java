@@ -68,7 +68,7 @@ public class StdOutScoreBoardProcessor implements IScoreBoardProcessor {
                         if (sum.equals(MAX_HITS_IN_ROLL)) {
                             board.append("/\t");
                         } else {
-                            board.append(hits).append("\t");
+                            board.append(chance).append("\t");
                         }
                     }
                 }

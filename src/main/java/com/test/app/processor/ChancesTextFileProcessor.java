@@ -3,9 +3,10 @@ package com.test.app.processor;
 import com.test.app.model.Player;
 import org.apache.commons.lang.Validate;
 
-import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
@@ -13,7 +14,6 @@ import java.util.stream.Collectors;
 
 public class ChancesTextFileProcessor implements IChancesFileProcessor {
 
-    private static final Integer TOTAL_NUMBER_PLAYERS = 2;
     private static final String ROWS_DELIMITER = "\t";
     private static final String COLUMNS_DELIMITER = " ";
 
@@ -23,16 +23,35 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
         this.players = new HashMap<>();
     }
 
-    public void processPlayersChances(InputStream is) throws IllegalArgumentException, FileNotFoundException, Exception {
+    private List<String> loadData(InputStream is) {
         Scanner sc = new Scanner(is);
         sc.useDelimiter(ROWS_DELIMITER);
 
+        List<String> data = new ArrayList<>() ;
+        while (sc.hasNext()) {
+            data.add(sc.next());
+        }
+        return data;
+    }
+
+    private Integer calculateNumberOfPlayers(List<String> data) {
+        return data.stream()
+            .map(s -> s.split(COLUMNS_DELIMITER)[0])
+            .distinct()
+            .collect(Collectors.toList())
+            .size();
+    }
+
+    public void processPlayersChances(InputStream is) throws Exception {
+        List<String> data = this.loadData(is);
+
+        Integer totalNumberPlayers = this.calculateNumberOfPlayers(data);
         Integer currentFrame = 1;
         boolean frameChanged = false;
         Player previousPlayer = null;
 
-        while (sc.hasNext()) {
-            String[] play = sc.next().split(COLUMNS_DELIMITER);
+        for (String line : data) {
+            String [] play = line.split(COLUMNS_DELIMITER);
             Validate.notEmpty(play);
             Validate.isTrue(play.length == 2);
 
@@ -52,7 +71,7 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
             player.addChance(currentFrame, chance);
 
             // Calculate if frame is complete and should move to the next frame
-            if (this.isFrameCompleteForAllPlayers(currentFrame)) {
+            if (this.isFrameCompleteForAllPlayers(totalNumberPlayers, currentFrame)) {
                 currentFrame++;
                 frameChanged = true;
             } else {
@@ -73,14 +92,14 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
         return player;
     }
 
-    private boolean isFrameCompleteForAllPlayers(final Integer currentFrame) {
+    private boolean isFrameCompleteForAllPlayers(final Integer totalNumberPlayers, final Integer currentFrame) {
         boolean isFrameComplete = this.players.entrySet().stream()
                 .map(e -> e.getValue().hasFrameComplete(currentFrame))
                 .collect(Collectors.toList())
                 .stream()
                 .reduce(Boolean.TRUE, Boolean::logicalAnd);
 
-        return TOTAL_NUMBER_PLAYERS.equals(this.players.size()) && isFrameComplete;
+        return totalNumberPlayers.equals(this.players.size()) && isFrameComplete;
     }
 
     public Map<String, Player> getPlayers() {

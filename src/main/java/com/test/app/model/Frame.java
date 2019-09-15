@@ -57,7 +57,7 @@ public class Frame {
         this.rolls.add(chance);
 
         this.isStrike = MAX_HITS_IN_ROLL.equals(pinsHit);
-        this.isSpare = !this.isStrike && MAX_HITS_IN_ROLL.equals(this.sumHitsOfSpare());
+        this.isSpare = !this.isStrike && MAX_HITS_IN_ROLL.equals(this.sumTwoHits());
     }
 
     private Integer getPinsHit(String chance) {
@@ -91,7 +91,7 @@ public class Frame {
         return MAX_HITS_IN_ROLL.equals(firstChanceHits) || this.rolls.size()==MAX_CHANCES_FRAME;
     }
 
-    public Integer sumHitsOfSpare() {
+    public Integer sumTwoHits() {
         if (this.rolls.size() > 1) {
             return this.getPinsHit(this.rolls.get(0)) + this.getPinsHit(this.rolls.get(1));
         }
@@ -106,20 +106,6 @@ public class Frame {
 
     public Integer getFirstChanceHits() {
         return this.getPinsHit(this.rolls.get(0));
-    }
-
-    public Integer getFirstChanceNotStrikeHits() {
-        return this.rolls.stream()
-                .filter(chance -> !MAX_HITS_IN_ROLL.equals(this.getPinsHit(chance)))
-                .map(chance -> this.getPinsHit(chance))
-                .findFirst().get();
-    }
-
-    public Integer sumAllStrikesHits() {
-        return this.rolls.stream()
-                .filter(chance -> MAX_HITS_IN_ROLL.equals(this.getPinsHit(chance)))
-                .map(chance -> this.getPinsHit(chance))
-                .reduce(0, Integer::sum);
     }
 
     public boolean isStrike() {
