@@ -3,10 +3,8 @@ package com.test.app.processor;
 import com.test.app.model.Frame;
 import com.test.app.model.Player;
 
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Queue;
 
 public class ScoreProcessor implements IScoreProcessor {
 
@@ -19,54 +17,59 @@ public class ScoreProcessor implements IScoreProcessor {
 
     private void calculatePlayerScore(Player player) {
         Frame previousFrame = null;
-        Queue<Frame> strikesSpares = new LinkedList<>();
         for (Frame currentFrame : player.getFrames()) {
+            Integer previousScore = (previousFrame!=null) ? previousFrame.getScore() : 0;
+            currentFrame.setScore(previousScore);
+
             Integer individualScore = currentFrame.sumAllRollsHits();
-
-            // Check if there is any frame in the stack and process its score
-            if (!strikesSpares.isEmpty()) {
-                int strikeNumber = 1;
-                Frame queueFrame = null;
-                while (!strikesSpares.isEmpty()) {
-                    queueFrame = strikesSpares.remove();
-
-                    // If it's a spare, only add the first hit of the current frame
-                    if (queueFrame.isSpare()) {
-                        queueFrame.setScore(queueFrame.getScore() + currentFrame.getFirstChanceHits());
-                    } else if (queueFrame.isStrike()) {
-                        // Only if current frame is not a strike we remove the frame from the queue
-                        if (!currentFrame.isStrike()) {
-                            strikesSpares.clear();
-                        }
-                        queueFrame.setScore(queueFrame.getScore() + individualScore * strikeNumber++);
-                    }
-
-                    // Update the current frame score
-                    currentFrame.setScore(individualScore + queueFrame.getScore());
-
-                    /*try {
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }*/
+            if (!currentFrame.isLastFrame()) {
+                // If current frame is a spare or a strike then add up corresponding next frames
+                if (currentFrame.isSpare()) {
+                    Integer nextFrameHits = calculateIfShouldAddFromNextFrames(currentFrame, currentFrame, player.getFrames(), false);
+                    currentFrame.setScore(currentFrame.getScore() + individualScore + nextFrameHits);
+                } else if (currentFrame.isStrike()) {
+                    Integer nextFrameHits = calculateIfShouldAddFromNextFrames(currentFrame, currentFrame, player.getFrames(), false);
+                    currentFrame.setScore(currentFrame.getScore() + nextFrameHits);
+                } else {
+                    currentFrame.setScore(currentFrame.getScore() + individualScore);
                 }
-
-                if (currentFrame.isStrike() && Objects.nonNull(queueFrame)) {
-                    strikesSpares.add(queueFrame);
-                }
-
             } else {
-                Integer previousScore = (previousFrame!=null) ? previousFrame.getScore() : 0;
-                currentFrame.setScore(previousScore + individualScore);
-            }
-
-            // If the current frame is a strike or a spare, save it for later processing
-            if (currentFrame.isStrike() || currentFrame.isSpare()) {
-                strikesSpares.add(currentFrame);
+                currentFrame.setScore(currentFrame.getScore() + currentFrame.sumAllRollsHits());
             }
 
             previousFrame = currentFrame;
         }
+    }
+
+    private Integer calculateIfShouldAddFromNextFrames(Frame targetFrame, Frame currentFrame, List<Frame> frames, boolean stopWhenSpare) {
+        if (currentFrame.isLastFrame()) {
+            return calculateWhatScoreReturnFromLastFrame(targetFrame, currentFrame, frames.get(currentFrame.getNumber()-2));
+        }
+
+        Frame nextFrame = frames.get(currentFrame.getNumber());
+
+        if (currentFrame.isSpare()) {
+            if (stopWhenSpare) {
+                return currentFrame.sumAllRollsHits();
+            }
+            return nextFrame.isStrike() ? nextFrame.sumAllRollsHits() : nextFrame.getFirstChanceHits();
+        } else if (currentFrame.isStrike()) {
+            Integer calculatedHits = calculateIfShouldAddFromNextFrames(targetFrame, nextFrame, frames, true);
+            return currentFrame.sumAllRollsHits() + calculatedHits;
+        }
+
+        return currentFrame.sumAllRollsHits();
+    }
+
+    private Integer calculateWhatScoreReturnFromLastFrame(Frame targetFrame, Frame currentFrame, Frame previousFrame) {
+        // Only if the current frame is the consecutive of the target frame
+        if (targetFrame.getNumber().equals(previousFrame.getNumber())) {
+            if (currentFrame.isSpare()) {
+                return currentFrame.sumHitsOfSpare();
+            }
+            return currentFrame.sumAllStrikesHits() + currentFrame.getFirstChanceNotStrikeHits();
+        }
+        return currentFrame.sumAllStrikesHits();
     }
 
 }

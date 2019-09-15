@@ -30,8 +30,9 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
         Integer currentFrame = 1;
         boolean frameChanged = false;
         Player previousPlayer = null;
+
         while (sc.hasNext()) {
-            String [] play = sc.next().split(COLUMNS_DELIMITER);
+            String[] play = sc.next().split(COLUMNS_DELIMITER);
             Validate.notEmpty(play);
             Validate.isTrue(play.length == 2);
 

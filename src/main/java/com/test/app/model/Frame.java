@@ -20,11 +20,13 @@ public class Frame {
     private Integer score;
     private boolean isStrike;
     private boolean isSpare;
+    private boolean hasFault;
 
     public Frame(Integer number) {
         this.number = number;
         this.isStrike = false;
         this.isSpare = false;
+        this.hasFault = false;
         this.score = 0;
         this.rolls = new ArrayList<>();
     }
@@ -55,7 +57,7 @@ public class Frame {
         this.rolls.add(chance);
 
         this.isStrike = MAX_HITS_IN_ROLL.equals(pinsHit);
-        this.isSpare = !this.isStrike && MAX_HITS_IN_ROLL.equals(this.sumAllRollsHits());
+        this.isSpare = !this.isStrike && MAX_HITS_IN_ROLL.equals(this.sumHitsOfSpare());
     }
 
     private Integer getPinsHit(String chance) {
@@ -63,6 +65,7 @@ public class Frame {
         if (NumberUtils.isNumber(chance)) {
             pinsHit = Integer.valueOf(chance);
         } else if (FAULT.equalsIgnoreCase(chance)) {
+            this.hasFault = true;
             pinsHit = 0;
         }
 
@@ -78,24 +81,45 @@ public class Frame {
 
         // If it's the last frame
         if (this.isLastFrame()) {
-            // If the first chance of the last frame has the maximum hits in the roll
-            if (MAX_HITS_IN_ROLL.equals(firstChanceHits)) {
-                return MAX_CHANCES_LAST_FRAME == this.rolls.size(); // The max number of chances is equal to MAX_CHANCES_LAST_FRAME
+            // If the first chance of the last frame has the maximum hits in the roll or frame is a spare
+            boolean isSpare = this.rolls.size() > 1 && MAX_HITS_IN_ROLL.equals(this.getPinsHit(this.rolls.get(0)) + this.getPinsHit(this.rolls.get(1)));
+            if (MAX_HITS_IN_ROLL.equals(firstChanceHits) || isSpare) {
+                return MAX_CHANCES_LAST_FRAME == this.rolls.size(); // Return true if the max number of chances is equal to MAX_CHANCES_LAST_FRAME
             }
         }
         // Otherwise, frame is complete if the first chance is MAX_HITS_IN_ROLL or the number of chances in the frame is MAX_CHANCES_FRAME
         return MAX_HITS_IN_ROLL.equals(firstChanceHits) || this.rolls.size()==MAX_CHANCES_FRAME;
     }
 
+    public Integer sumHitsOfSpare() {
+        if (this.rolls.size() > 1) {
+            return this.getPinsHit(this.rolls.get(0)) + this.getPinsHit(this.rolls.get(1));
+        }
+        return 0;
+    }
+
     public Integer sumAllRollsHits() {
-        Integer sum = this.rolls.stream()
+        return this.rolls.stream()
                 .map(chance -> this.getPinsHit(chance))
                 .reduce(0, Integer::sum);
-        return sum;
     }
 
     public Integer getFirstChanceHits() {
         return this.getPinsHit(this.rolls.get(0));
+    }
+
+    public Integer getFirstChanceNotStrikeHits() {
+        return this.rolls.stream()
+                .filter(chance -> !MAX_HITS_IN_ROLL.equals(this.getPinsHit(chance)))
+                .map(chance -> this.getPinsHit(chance))
+                .findFirst().get();
+    }
+
+    public Integer sumAllStrikesHits() {
+        return this.rolls.stream()
+                .filter(chance -> MAX_HITS_IN_ROLL.equals(this.getPinsHit(chance)))
+                .map(chance -> this.getPinsHit(chance))
+                .reduce(0, Integer::sum);
     }
 
     public boolean isStrike() {
@@ -120,6 +144,10 @@ public class Frame {
 
     public List<String> getRolls() {
         return rolls;
+    }
+
+    public Integer getNumber() {
+        return number;
     }
 
     public String toString() {
