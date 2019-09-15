@@ -4,11 +4,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.test.app.injection.BasicModule;
 import com.test.app.model.Player;
-import com.test.app.processor.ChancesTextFileProcessor;
 import com.test.app.processor.IChancesFileProcessor;
 import com.test.app.processor.IScoreBoardProcessor;
 import com.test.app.processor.IScoreProcessor;
 
+import java.io.FileInputStream;
 import java.util.Map;
 
 /**
@@ -17,16 +17,15 @@ import java.util.Map;
  */
 public class BowlingApp {
 
-    private ChancesTextFileProcessor chancesTextFileProcessor;
-
     public static void main(String [] args) throws Exception {
         Injector injector = Guice.createInjector(new BasicModule());
 
         String fileName = args[0];
+        FileInputStream fis = new FileInputStream(fileName);
 
         // First create the data structure
         IChancesFileProcessor chancesTextFileProcessor = injector.getInstance(IChancesFileProcessor.class);
-        chancesTextFileProcessor.processPlayersChances(fileName);
+        chancesTextFileProcessor.processPlayersChances(fis);
 
         Map<String, Player> players = chancesTextFileProcessor.getPlayers();
 

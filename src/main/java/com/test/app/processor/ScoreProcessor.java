@@ -3,17 +3,16 @@ package com.test.app.processor;
 import com.test.app.model.Frame;
 import com.test.app.model.Player;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Queue;
 
 public class ScoreProcessor implements IScoreProcessor {
 
-    private Map<String, Player> players;
-
     public void calculateScores(Map<String, Player> players) {
-        this.players = players;
-
         // For each player, calculate its score
-        this.players.forEach((k, v) -> {
+        players.forEach((k, v) -> {
             this.calculatePlayerScore(v);
         });
     }
@@ -40,8 +39,6 @@ public class ScoreProcessor implements IScoreProcessor {
                             strikesSpares.clear();
                         }
                         queueFrame.setScore(queueFrame.getScore() + individualScore * strikeNumber++);
-                    } else {
-                        System.out.println("JUST REMOVING FROM QUEUE");
                     }
 
                     // Update the current frame score

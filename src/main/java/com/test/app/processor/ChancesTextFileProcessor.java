@@ -3,8 +3,8 @@ package com.test.app.processor;
 import com.test.app.model.Player;
 import org.apache.commons.lang.Validate;
 
-import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -23,11 +23,8 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
         this.players = new HashMap<>();
     }
 
-    public void processPlayersChances(String fileName) throws IllegalArgumentException, FileNotFoundException, Exception {
-        Validate.notEmpty(fileName);
-
-        File file = new File(fileName);
-        Scanner sc = new Scanner(file);
+    public void processPlayersChances(InputStream is) throws IllegalArgumentException, FileNotFoundException, Exception {
+        Scanner sc = new Scanner(is);
         sc.useDelimiter(ROWS_DELIMITER);
 
         Integer currentFrame = 1;
@@ -42,13 +39,18 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
             String chance = play[1];
 
             // If the current player is different than the previous one and that one doesn't have its frame complete
-            if (Objects.nonNull(previousPlayer) && !previousPlayer.getName().equals(playerName) && !previousPlayer.hasFrameComplete(frameChanged ? currentFrame - 1 : currentFrame)) {
-                throw new Exception(String.format("Cannot add chance of player %s because previous player %s doesn't have its frame %d complete.", playerName, previousPlayer.getName(), currentFrame));
+            if (Objects.nonNull(previousPlayer)
+                    && !previousPlayer.getName().equals(playerName)
+                    && !previousPlayer.hasFrameComplete(frameChanged ? currentFrame - 1 : currentFrame)) {
+                throw new Exception(String.format(
+                        "Cannot add chance of player %s because previous player %s doesn't have its frame %d complete.",
+                        playerName, previousPlayer.getName(), currentFrame));
             }
 
             Player player = obtainPlayer(playerName);
             player.addChance(currentFrame, chance);
 
+            // Calculate if frame is complete and should move to the next frame
             if (this.isFrameCompleteForAllPlayers(currentFrame)) {
                 currentFrame++;
                 frameChanged = true;
@@ -84,4 +86,7 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
         return players;
     }
 
+    protected void setPlayers(Map<String, Player> players) {
+        this.players = players;
+    }
 }
