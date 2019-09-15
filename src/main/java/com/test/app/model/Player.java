@@ -1,7 +1,5 @@
 package com.test.app.model;
 
-import org.apache.commons.lang.Validate;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

@@ -17,9 +17,15 @@ public class Frame {
 
     private Integer number;
     private List<String> rolls;
+    private Integer score;
+    private boolean isStrike;
+    private boolean isSpare;
 
     public Frame(Integer number) {
         this.number = number;
+        this.isStrike = false;
+        this.isSpare = false;
+        this.score = 0;
         this.rolls = new ArrayList<>();
     }
 
@@ -47,6 +53,9 @@ public class Frame {
         }
 
         this.rolls.add(chance);
+
+        this.isStrike = MAX_HITS_IN_ROLL.equals(pinsHit);
+        this.isSpare = !this.isStrike && MAX_HITS_IN_ROLL.equals(this.sumAllRollsHits());
     }
 
     private Integer getPinsHit(String chance) {
@@ -68,14 +77,49 @@ public class Frame {
         Integer firstChanceHits = this.getPinsHit(this.rolls.get(0));
 
         // If it's the last frame
-        if (MAX_NUMBER_OF_FRAMES.equals(this.number)) {
+        if (this.isLastFrame()) {
             // If the first chance of the last frame has the maximum hits in the roll
             if (MAX_HITS_IN_ROLL.equals(firstChanceHits)) {
-                return MAX_CHANCES_LAST_FRAME == this.rolls.size(); // The max number of chances is MAX_CHANCES_LAST_FRAME
+                return MAX_CHANCES_LAST_FRAME == this.rolls.size(); // The max number of chances is equal to MAX_CHANCES_LAST_FRAME
             }
         }
         // Otherwise, frame is complete if the first chance is MAX_HITS_IN_ROLL or the number of chances in the frame is MAX_CHANCES_FRAME
         return MAX_HITS_IN_ROLL.equals(firstChanceHits) || this.rolls.size()==MAX_CHANCES_FRAME;
+    }
+
+    public Integer sumAllRollsHits() {
+        Integer sum = this.rolls.stream()
+                .map(chance -> this.getPinsHit(chance))
+                .reduce(0, Integer::sum);
+        return sum;
+    }
+
+    public Integer getFirstChanceHits() {
+        return this.getPinsHit(this.rolls.get(0));
+    }
+
+    public boolean isStrike() {
+        return this.isStrike;
+    }
+
+    public boolean isSpare() {
+        return this.isSpare;
+    }
+
+    public boolean isLastFrame() {
+        return MAX_NUMBER_OF_FRAMES.equals(this.number);
+    }
+
+    public Integer getScore() {
+        return this.score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    public List<String> getRolls() {
+        return rolls;
     }
 
     public String toString() {
@@ -85,6 +129,8 @@ public class Frame {
         resp.append(this.rolls.stream()
                 .map(r -> r.toString())
                 .collect(Collectors.joining(", ")));
+
+        resp.append(String.format(" (Score = %d)", this.score));
 
         return resp.toString();
     }

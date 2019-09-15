@@ -15,6 +15,7 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
 
     private static final Integer TOTAL_NUMBER_PLAYERS = 2;
     private static final String ROWS_DELIMITER = "\t";
+    private static final String COLUMNS_DELIMITER = " ";
 
     private Map<String, Player> players;
 
@@ -33,7 +34,7 @@ public class ChancesTextFileProcessor implements IChancesFileProcessor {
         boolean frameChanged = false;
         Player previousPlayer = null;
         while (sc.hasNext()) {
-            String [] play = sc.next().split(" ");
+            String [] play = sc.next().split(COLUMNS_DELIMITER);
             Validate.notEmpty(play);
             Validate.isTrue(play.length == 2);
 
