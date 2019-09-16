@@ -6,6 +6,9 @@ import com.test.app.model.Player;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Processes the plays of every player to calculate the score of each frame.
+ */
 public class ScoreProcessor implements IScoreProcessor {
 
     private static final Integer MAX_NEXT_BALLS_CONSIDERED = 2;

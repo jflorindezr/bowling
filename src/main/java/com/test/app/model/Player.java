@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Contains the name of the player and all its plays distributed in frames.
+ */
 public class Player {
 
     private String name;

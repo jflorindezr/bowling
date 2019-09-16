@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Contains the plays in the frame, and an indicator if its a strike or a spare.
+ */
 public class Frame {
 
     private static final String FAULT = "F";
@@ -20,13 +23,11 @@ public class Frame {
     private Integer score;
     private boolean isStrike;
     private boolean isSpare;
-    private boolean hasFault;
 
     public Frame(Integer number) {
         this.number = number;
         this.isStrike = false;
         this.isSpare = false;
-        this.hasFault = false;
         this.score = 0;
         this.rolls = new ArrayList<>();
     }
@@ -34,6 +35,10 @@ public class Frame {
     public void addChance(String chance) throws Exception {
         if (!NumberUtils.isNumber(chance) && !FAULT.equalsIgnoreCase(chance)) {
             throw new Exception(String.format("Chance value %s not valid in frame %d.", chance, this.number));
+        }
+
+        if (this.number > MAX_NUMBER_OF_FRAMES) {
+            throw new Exception(String.format("The frame is more than the max number of frames allowed."));
         }
 
         Integer pinsHit = getPinsHit(chance);
@@ -44,9 +49,14 @@ public class Frame {
             throw new Exception(String.format("Cannot add chance %d in frame %d because it's negative.", pinsHit, this.number));
         }
 
-        //   if hit is higher than MAX_HITS_IN_ROLL
+        //   if pins hit is higher than MAX_HITS_IN_ROLL
         if (pinsHit > MAX_HITS_IN_ROLL) {
             throw new Exception(String.format("Cannot add chance %d in frame %d because it's higher than the max number of possible pin hits in a roll.", pinsHit, this.number));
+        }
+
+        //   if sum of hits is higher than MAX_HITS_IN_ROLL
+        if (!this.isLastFrame() && (sumAllRollsHits() + pinsHit) > MAX_HITS_IN_ROLL) {
+            throw new Exception(String.format("Cannot add chance %d in frame %d because total of frame is higher than the max number of possible pin hits in a frame.", pinsHit, this.number));
         }
 
         //    if currentFrame == 10 and first roll was a strike then we should allow extra chances
@@ -65,7 +75,6 @@ public class Frame {
         if (NumberUtils.isNumber(chance)) {
             pinsHit = Integer.valueOf(chance);
         } else if (FAULT.equalsIgnoreCase(chance)) {
-            this.hasFault = true;
             pinsHit = 0;
         }
 

@@ -7,6 +7,9 @@ import org.apache.commons.lang.math.NumberUtils;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Prints the score board of all players in the standard output.
+ */
 public class StdOutScoreBoardProcessor implements IScoreBoardProcessor {
 
     private static final Integer MAX_NUMBER_OF_FRAMES = 10;
