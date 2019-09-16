@@ -17,6 +17,7 @@ mvn exec:java -Dexec.mainClass="com.test.app.BowlingApp"  -Dexec.args="filename.
 
 ## Run Unit Test
 mvn test compile
+
 mvn test
 
 ## Run Integration Test
