@@ -108,7 +108,6 @@ public class BowlingAppIntegrationTest {
         BowlingApp.main(new String [] { fileName });
 
         // THEN
-        verify(this.out).println(anyString());
     }
 
 }
