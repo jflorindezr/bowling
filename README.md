@@ -3,9 +3,23 @@ Processes a text file with plays and prints a board with chances and scores.
 
 ## Run the application
 
-mvn compile
+First let's compile everything:
 
-mvn exec:java -Dexec.mainClass="com.test.app.BowlingApp"  -Dexec.args="filename.txt"
+mvn compile
+mvn test compile
+mvn test
+mvn clean verify
+
+Then, create the executable jar:
+
+mvn clean package
+
+Finally, run the application:
+
+java -jar /path/to/bowling.jar /path/to/file.txt
+
+For example, if I have the project in path: /workspace/bowling, then to run the application I can do:
+/workspace/bowling$ java -jar ./target/bowling.jar /workspace/bowling/src/test/resources/hits.txt
 
 * For normal input use hits.txt file.
 * For second normal input use hits_2.txt file.
